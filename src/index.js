@@ -32,7 +32,7 @@ function checksExistsUser(request, response, next) {
   next();
 }
 
-// insert user
+// Create user
 app.post('/users', checksExistsUser, (request, response) => {
   const { name, username } = request.body;
   const user = {
@@ -48,18 +48,21 @@ app.post('/users', checksExistsUser, (request, response) => {
 app.get('/users', (request,response) =>{
   response.send(users);
 });
-// insert todo
+// Create todo
 app.post('/todos', checksExistsUserAccount, (request, response) => {
-  const { title, done, deadLine } = request.body;
+  const { title, deadLine } = request.body;
   const user = request.user;
-  user.todos.push({
-    title,
-    done,
+  const todo = {
     id:uuidv4(),
+    title,
+    done:false,
     deadLine: new Date(deadLine),
-    created_at: new Date(),
+    created_at: new Date()
+  }
+  user.todos.push({
+    ...todo,
   })
-  return response.status(201).send();
+  return response.status(201).json(todo);
 });
 // list todos
 app.get('/todos', checksExistsUserAccount, (request, response) => {
@@ -71,32 +74,32 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   const { id } = request.params;
   const { title, deadLine } = request.body;
   const user = request.user;
-  const todoExist = user.todos.some(item =>{
+  const todoExist = user.todos.find(item =>{
     if (item.id === id){
-        item.title = title;
-        item.deadLine = deadLine;
-        return true;
+      item.title = title;
+      item.deadLine = new date(deadLine);
+      return item;
     } 
   });
   if (!todoExist) {
     return response.status(404).json({ error: "Mensagem de erro"});
   }
-  return response.json(user.todos)
+  return response.json(todoExist)
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   const { id } = request.params;
   const user = request.user;
-  const todoExist = user.todos.some(item =>{
+  const todoExist = user.todos.find(item =>{
     if (item.id === id){
         item.done = true;
-        return true;
+        return item;
     } 
   });
   if (!todoExist) {
     return response.status(404).json({ error: "Mensagem de erro"});
   }
-  return response.json(user.todos)
+  return response.json(todoExist)
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
@@ -111,7 +114,7 @@ app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
     return response.status(404).json({ error: "Mensagem de erro"});
   }
   user.todos.splice(id,1);
-  return response.json(user.todos)
+  return response.status(204).send();
 });
 
 module.exports = app;
